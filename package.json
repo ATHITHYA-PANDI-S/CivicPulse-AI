@@ -4,6 +4,7 @@
   "description": "CivicPulse AI - AI Emergency & Citizen Complaint Portal (MERN Stack)",
   "main": "NULL-POINTERS-/server/dist/server.js",
   "scripts": {
+    "postinstall": "npm --prefix NULL-POINTERS-/client install && npm --prefix NULL-POINTERS-/server install",
     "dev": "node run-dev.js",
     "dev:server": "cd NULL-POINTERS-/server && npm run dev",
     "dev:client": "cd NULL-POINTERS-/client && npm run dev",

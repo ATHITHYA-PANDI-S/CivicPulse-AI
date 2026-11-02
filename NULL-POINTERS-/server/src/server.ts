@@ -36,8 +36,17 @@ app.get('/api/health', (req, res) => {
 app.use('/api', apiRoutes);
 
 // In production / cloud environments, serve the compiled Vite client
-const clientDistPath = path.resolve(__dirname, '../../client/dist');
+const possibleClientPaths = [
+  path.resolve(__dirname, '../../client/dist'),
+  path.resolve(__dirname, '../client/dist'),
+  path.resolve(process.cwd(), 'NULL-POINTERS-/client/dist'),
+  path.resolve(process.cwd(), 'client/dist'),
+  path.resolve(__dirname, 'client/dist')
+];
+const clientDistPath = possibleClientPaths.find(p => fs.existsSync(p)) || possibleClientPaths[0];
+
 if (fs.existsSync(clientDistPath)) {
+  console.log(`📦 [Production] Serving static client from: ${clientDistPath}`);
   app.use(express.static(clientDistPath));
 
   app.get('*', (req, res, next) => {
@@ -50,6 +59,8 @@ if (fs.existsSync(clientDistPath)) {
     }
     next();
   });
+} else {
+  console.log(`⚠️ [Production] Client dist not found at any path. Checked:`, possibleClientPaths);
 }
 
 // 404 handler for unmatched API routes
