@@ -1,0 +1,13 @@
+{
+  "name": "citizen-ai-portal-root",
+  "version": "1.0.0",
+  "description": "CivicPulse AI - AI Emergency & Citizen Complaint Portal (MERN Stack)",
+  "scripts": {
+    "dev": "node run-dev.js",
+    "dev:server": "cd NULL-POINTERS-/server && npm run dev",
+    "dev:client": "cd NULL-POINTERS-/client && npm run dev",
+    "build:server": "cd NULL-POINTERS-/server && npm run build",
+    "build:client": "cd NULL-POINTERS-/client && npm run build",
+    "build": "cd NULL-POINTERS-/server && npm run build && cd ../client && npm run build"
+  }
+}

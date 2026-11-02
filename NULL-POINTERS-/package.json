@@ -1,0 +1,11 @@
+{
+  "name": "citizen-ai-portal",
+  "version": "1.0.0",
+  "description": "AI-Powered Citizen Complaint & Emergency Response Portal",
+  "scripts": {
+    "dev": "node ../run-dev.js",
+    "install:all": "cd server && npm.cmd install && cd ../client && npm.cmd install",
+    "dev:server": "cd server && npm.cmd run dev",
+    "dev:client": "cd client && npm.cmd run dev"
+  }
+}
