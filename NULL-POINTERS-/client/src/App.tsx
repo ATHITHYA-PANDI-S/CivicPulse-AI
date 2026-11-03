@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ComplaintProvider } from './context/ComplaintContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -253,7 +253,7 @@ const AppRoutes: React.FC = () => {
 
 export function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <AuthProvider>
         <ComplaintProvider>
           <NotificationProvider>
@@ -263,7 +263,7 @@ export function App() {
           </NotificationProvider>
         </ComplaintProvider>
       </AuthProvider>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

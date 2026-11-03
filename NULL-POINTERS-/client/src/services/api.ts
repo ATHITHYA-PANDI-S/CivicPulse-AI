@@ -10,7 +10,18 @@ import {
   FieldWorker
 } from '../types';
 
-const API_BASE = '/api';
+// Dynamically resolve API_BASE to support reverse proxies like ByteXL (/proxy/5000)
+const getApiBase = () => {
+  if (typeof window === 'undefined') return '/api';
+  const pathname = window.location.pathname;
+  const proxyMatch = pathname.match(/^(\/proxy\/\d+)/);
+  if (proxyMatch) {
+    return `${proxyMatch[1]}/api`;
+  }
+  return '/api';
+};
+
+const API_BASE = getApiBase();
 
 export const api = {
   // Auth

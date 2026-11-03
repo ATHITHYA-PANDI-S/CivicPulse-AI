@@ -18,6 +18,15 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id']
 }));
 
+// Cloud IDE / ByteXL Reverse Proxy handler (strips /proxy/5000 prefix if passed by host)
+app.use((req, res, next) => {
+  const match = req.url.match(/^\/proxy\/\d+(\/.*)?$/);
+  if (match) {
+    req.url = match[1] || '/';
+  }
+  next();
+});
+
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
