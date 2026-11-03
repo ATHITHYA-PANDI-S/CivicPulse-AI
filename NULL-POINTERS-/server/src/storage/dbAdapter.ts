@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import mongoose from 'mongoose';
 import { 
   User, 
   Complaint, 
@@ -9,6 +10,8 @@ import {
   NotificationItem 
 } from '../types';
 import { initialData } from '../utils/seedData';
+import { UserModel } from '../models/User';
+import { ComplaintModel } from '../models/Complaint';
 
 const DATA_DIR = path.join(__dirname, '../../data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
@@ -96,6 +99,13 @@ class DatabaseAdapter {
   addUser(user: User): User {
     this.data.users.push(user);
     this.save();
+    if (mongoose.connection.readyState === 1) {
+      UserModel.findOneAndUpdate(
+        { email: user.email.toLowerCase() },
+        user,
+        { upsert: true, new: true }
+      ).catch((err: any) => console.warn('⚠️ [MongoDB Sync] User persist error:', err.message));
+    }
     return user;
   }
 
@@ -154,6 +164,10 @@ class DatabaseAdapter {
   addComplaint(complaint: Complaint): Complaint {
     this.data.complaints.unshift(complaint);
     this.save();
+    if (mongoose.connection.readyState === 1) {
+      ComplaintModel.create(complaint)
+        .catch((err: any) => console.warn('⚠️ [MongoDB Sync] Complaint persist error:', err.message));
+    }
     return complaint;
   }
 
@@ -166,6 +180,13 @@ class DatabaseAdapter {
       updatedAt: new Date().toISOString()
     };
     this.save();
+    if (mongoose.connection.readyState === 1) {
+      ComplaintModel.findOneAndUpdate(
+        { $or: [{ ticketNumber: id }, { _id: (mongoose.isValidObjectId(id) ? id : undefined) }] },
+        updates,
+        { new: true }
+      ).catch((err: any) => console.warn('⚠️ [MongoDB Sync] Complaint update error:', err.message));
+    }
     return this.data.complaints[idx];
   }
 
@@ -256,6 +277,44 @@ class DatabaseAdapter {
   // Reset helper for hackathon demo
   resetData(): void {
     this.seedInitialData();
+  }
+
+  // Dual-Mode Sync with MongoDB Collections
+  async syncWithMongo(): Promise<void> {
+    try {
+      if (mongoose.connection.readyState !== 1) return;
+      console.log('🔄 [MongoDB Sync] Synchronizing Mongoose collections with memory store...');
+      
+      // 1. Sync complaints from MongoDB if they exist
+      const mongoComplaints = await ComplaintModel.find().lean();
+      if (mongoComplaints.length > 0) {
+        this.data.complaints = mongoComplaints as any;
+        this.save();
+        console.log(`🍃 [MongoDB Sync] Loaded ${mongoComplaints.length} complaints from MongoDB.`);
+      } else if (this.data.complaints.length > 0) {
+        // Seed MongoDB collection with current complaints
+        await ComplaintModel.insertMany(this.data.complaints);
+        console.log(`🍃 [MongoDB Sync] Seeded ${this.data.complaints.length} complaints to MongoDB.`);
+      }
+
+      // 2. Sync users from MongoDB
+      const mongoUsers = await UserModel.find().lean();
+      if (mongoUsers.length > 0) {
+        mongoUsers.forEach((u: any) => {
+          if (!this.data.users.some(existing => existing.email.toLowerCase() === u.email.toLowerCase())) {
+            this.data.users.push(u);
+          }
+        });
+        this.save();
+        console.log(`🍃 [MongoDB Sync] Loaded ${mongoUsers.length} users from MongoDB.`);
+      } else {
+        // Seed initial users into MongoDB collection
+        await UserModel.insertMany(this.data.users);
+        console.log(`🍃 [MongoDB Sync] Seeded ${this.data.users.length} users to MongoDB.`);
+      }
+    } catch (err: any) {
+      console.warn('⚠️ [MongoDB Sync] Initialization sync error:', err.message);
+    }
   }
 }
 

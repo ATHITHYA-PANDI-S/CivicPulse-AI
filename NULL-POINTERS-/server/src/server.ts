@@ -5,6 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import apiRoutes from './routes/api';
 import { connectDB, getDbStatus } from './config/db';
+import { db } from './storage/dbAdapter';
 
 dotenv.config();
 
@@ -88,7 +89,10 @@ export default app;
 
 // Initialize database and start server
 const startServer = async () => {
-  await connectDB();
+  const isMongo = await connectDB();
+  if (isMongo) {
+    await db.syncWithMongo();
+  }
 
   app.listen(PORT, () => {
     console.log(`🚀 [MERN Stack] CivicPulse AI Backend listening on http://localhost:${PORT}`);
