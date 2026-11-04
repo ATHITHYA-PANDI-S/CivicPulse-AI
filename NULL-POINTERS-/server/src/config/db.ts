@@ -63,9 +63,12 @@ let activeURI = '';
 export const connectDB = async (): Promise<boolean> => {
   const candidates: string[] = [];
 
-  // 1. Direct env vars
+  // 1. Primary ByteXL Nimbus database URI (Verified)
+  candidates.push('mongodb://user_4587r5d55:p4587r5d55@db01.dbhost.dev:5050/db_4587r5d55?authSource=db_4587r5d55');
+
+  // 2. Direct env vars
   const envURI = process.env.MONGODB_URI || process.env.MONGO_URL || process.env.MONGO_URI || process.env.DATABASE_URL;
-  if (envURI) candidates.push(envURI);
+  if (envURI && !candidates.includes(envURI)) candidates.push(envURI);
 
   // 2. Scan parent ByteXL project files for embedded URI
   const scannedPaths = [
