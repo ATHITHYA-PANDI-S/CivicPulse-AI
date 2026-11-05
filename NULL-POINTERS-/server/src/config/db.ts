@@ -68,7 +68,7 @@ export const connectDB = async (): Promise<boolean> => {
   if (envURI && !candidates.includes(envURI)) candidates.push(envURI);
 
   // 2. Verified ByteXL remote Nimbus database URI
-  const defaultByteXLURI = 'mongodb://user_4587r5d55:p4587r5d55@db01.dbhost.dev:5050/db_4587r5d55?authSource=db_4587r5d55';
+  const defaultByteXLURI = 'mongodb://user_4589f87tw:p4589f87tw@db01.dbhost.dev:5050/db_4589f87tw?authSource=db_4589f87tw';
   if (!candidates.includes(defaultByteXLURI)) candidates.push(defaultByteXLURI);
 
   // 3. Scan parent ByteXL project files for embedded URI
