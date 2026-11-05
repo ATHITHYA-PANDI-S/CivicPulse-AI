@@ -63,14 +63,15 @@ let activeURI = '';
 export const connectDB = async (): Promise<boolean> => {
   const candidates: string[] = [];
 
-  // 1. Primary ByteXL Nimbus database URI (Verified)
-  candidates.push('mongodb://user_4587r5d55:p4587r5d55@db01.dbhost.dev:5050/db_4587r5d55?authSource=db_4587r5d55');
-
-  // 2. Direct env vars
+  // 1. Direct env vars (highest priority: user-specified MONGODB_URI in VS Code .env)
   const envURI = process.env.MONGODB_URI || process.env.MONGO_URL || process.env.MONGO_URI || process.env.DATABASE_URL;
   if (envURI && !candidates.includes(envURI)) candidates.push(envURI);
 
-  // 2. Scan parent ByteXL project files for embedded URI
+  // 2. Verified ByteXL remote Nimbus database URI
+  const defaultByteXLURI = 'mongodb://user_4587r5d55:p4587r5d55@db01.dbhost.dev:5050/db_4587r5d55?authSource=db_4587r5d55';
+  if (!candidates.includes(defaultByteXLURI)) candidates.push(defaultByteXLURI);
+
+  // 3. Scan parent ByteXL project files for embedded URI
   const scannedPaths = [
     '/home/workspace/my-project/index.js',
     '/home/workspace/my-project/server.js',
@@ -84,32 +85,33 @@ export const connectDB = async (): Promise<boolean> => {
     }
   }
 
-  // 3. Common ByteXL Nimbus database URIs
+  // 4. Common local/container endpoints
+  candidates.push('mongodb://127.0.0.1:27017/db_4587r5d55');
   candidates.push('mongodb://127.0.0.1:27017/db_4583t7ec5');
-  candidates.push('mongodb://localhost:27017/db_4583t7ec5');
-  candidates.push('mongodb://mongodb:27017/db_4583t7ec5');
   candidates.push('mongodb://127.0.0.1:27017/citizen_ai_portal');
-  candidates.push('mongodb://localhost:27017/citizen_ai_portal');
 
   mongoose.set('strictQuery', false);
 
   for (const uri of candidates) {
+    const isRemote = uri.includes('@') || uri.includes('mongodb+srv');
+    const maskedURI = uri.replace(/:([^:@]+)@/, ':****@');
     try {
+      console.log(`🔌 [MERN Stack] Connecting to MongoDB: ${maskedURI}...`);
       const conn = await mongoose.connect(uri, {
-        serverSelectionTimeoutMS: 1500,
+        serverSelectionTimeoutMS: isRemote ? 5000 : 1500,
       });
 
       isConnected = true;
       activeURI = uri;
       console.log(`🍃 [MERN Stack] MongoDB Connected successfully: ${conn.connection.host} (DB: ${conn.connection.name})`);
       return true;
-    } catch (e) {
-      // try next candidate
+    } catch (e: any) {
+      console.log(`⚠️ [MERN Stack] Could not connect to ${maskedURI}: ${e.message}`);
     }
   }
 
   isConnected = false;
-  console.log(`ℹ️ [MERN Stack] Local MongoDB service inactive.`);
+  console.log(`ℹ️ [MERN Stack] Remote/Local MongoDB service unreachable.`);
   console.log(`🚀 [MERN Stack] Running in resilient hybrid mode: Embedded database active with zero-latency seed data.`);
   return false;
 };
